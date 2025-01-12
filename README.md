@@ -88,4 +88,5 @@ are almost equal or show their values as the error message. The value of
 ## Authors
 
 David Siñuela Pastor <siu.4coders@gmail.com>
+
 Pierre Le Meur <pierre.lemeur72@gmail.com>
