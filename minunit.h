@@ -64,6 +64,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 /*  Maximum length of last message */
 #define MINUNIT_MESSAGE_LEN 1024
@@ -80,6 +81,9 @@ static int minunit_status = 0;
 static double minunit_real_timer = 0;
 static double minunit_proc_timer = 0;
 
+/* log printing */
+static int minunit_conf_log = 1;
+
 /*  Last message */
 static char minunit_last_message[MINUNIT_MESSAGE_LEN];
 
@@ -95,8 +99,36 @@ static void (*minunit_teardown)(void) = NULL;
 	block\
 } while(0)
 
+/* String formatting */
+static char* format_test_name(char* test_name) {
+	size_t name_size = strlen(test_name) + 1;
+	char* ret_name = malloc(sizeof(char) * name_size);
+	memcpy(ret_name, test_name, name_size);
+
+	/* setting in uppercase the first letter */
+	if (ret_name[0] >= 97 && ret_name[0] <= 122) {
+		ret_name[0] -= 32;
+	}
+
+	/* replace _ by space
+	 * name_size - 1 because the last char is an \0
+	 * * */
+	for (int i = 1; i < name_size - 1; i++) {
+		if (ret_name[i] == 95) {
+			ret_name[i] = 32;
+		}
+	}
+
+	return ret_name;
+}
+
+#define MU_NAME(name) printf("\n\033[1m%s:\n\033[0m", #name);
+
 /*  Run test suite and unset setup and teardown functions */
 #define MU_RUN_SUITE(suite_name) MU__SAFE_BLOCK(\
+	char* name = format_test_name(#suite_name);\
+	printf("\n\t%s: \n", name);\
+	free(name);\
 	suite_name();\
 	minunit_setup = NULL;\
 	minunit_teardown = NULL;\
@@ -106,6 +138,11 @@ static void (*minunit_teardown)(void) = NULL;
 #define MU_SUITE_CONFIGURE(setup_fun, teardown_fun) MU__SAFE_BLOCK(\
 	minunit_setup = setup_fun;\
 	minunit_teardown = teardown_fun;\
+)
+
+/*  Configure error logging */
+#define MU_CONFIGURE_LOG(conf_log) MU__SAFE_BLOCK(\
+	minunit_conf_log = conf_log;\
 )
 
 /*  Test runner */
@@ -118,11 +155,17 @@ static void (*minunit_teardown)(void) = NULL;
 	minunit_status = 0;\
 	test();\
 	minunit_run++;\
+	char* name = format_test_name(#test);\
 	if (minunit_status) {\
 		minunit_fail++;\
-		printf("F");\
-		printf("\n%s\n", minunit_last_message);\
+		printf("\033[31m\t  x %s\n\033[0m", name);\
+		if (minunit_conf_log) {\
+			printf("\n%s\n", minunit_last_message);\
+		}\
+	} else{\
+		printf("\033[32m\t  ✓ %s\n\033[0m", name);\
 	}\
+	free(name);\
 	(void)fflush(stdout);\
 	if (minunit_teardown) (*minunit_teardown)();\
 )
@@ -147,8 +190,6 @@ static void (*minunit_teardown)(void) = NULL;
 		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, #test);\
 		minunit_status = 1;\
 		return;\
-	} else {\
-		printf(".");\
 	}\
 )
 
@@ -165,8 +206,6 @@ static void (*minunit_teardown)(void) = NULL;
 		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
 		minunit_status = 1;\
 		return;\
-	} else {\
-		printf(".");\
 	}\
 )
 
@@ -180,8 +219,6 @@ static void (*minunit_teardown)(void) = NULL;
 		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %d expected but was %d", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
 		minunit_status = 1;\
 		return;\
-	} else {\
-		printf(".");\
 	}\
 )
 
@@ -196,8 +233,6 @@ static void (*minunit_teardown)(void) = NULL;
 		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %.*g expected but was %.*g", __func__, __FILE__, __LINE__, minunit_significant_figures, minunit_tmp_e, minunit_significant_figures, minunit_tmp_r);\
 		minunit_status = 1;\
 		return;\
-	} else {\
-		printf(".");\
 	}\
 )
 
@@ -215,8 +250,6 @@ static void (*minunit_teardown)(void) = NULL;
 		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: '%s' expected but was '%s'", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
 		minunit_status = 1;\
 		return;\
-	} else {\
-		printf(".");\
 	}\
 )
 

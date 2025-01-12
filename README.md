@@ -34,7 +34,9 @@ int main(int argc, char *argv[]) {
 Which will produce the following output:
 
 ```
-F
+	Test suite: 
+	  x Test check
+
 test_check failed:
 	readme_sample.c:4: 5 == 7
 
@@ -60,6 +62,10 @@ One can define setup and teardown functions and configure the test suite to run
 them by using the macro `MU_SUITE_CONFIGURE` with within a `MU_TEST_SUITE`
 declaration.
 
+## Logging configuration
+
+If you want to get an output without errors you can user `MU_CONFIGURE_LOG`
+
 ## Assertion types
 
 `mu_check(condition)`: will pass if the condition is evaluated to `true`, otherwise
@@ -82,3 +88,4 @@ are almost equal or show their values as the error message. The value of
 ## Authors
 
 David Siñuela Pastor <siu.4coders@gmail.com>
+Pierre Le Meur <pierre.lemeur72@gmail.com>

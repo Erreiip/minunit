@@ -61,6 +61,7 @@ MU_TEST(test_string_eq_fail){
 
 MU_TEST_SUITE(test_suite) {
 	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
+	MU_CONFIGURE_LOG(0);
 
 	MU_RUN_TEST(test_check);
 	MU_RUN_TEST(test_assert);
